@@ -10,9 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedTaskType = "non-recurring";
 
-    // Load counters from localStorage or initialize them
-    let tasksCompletedToday = parseInt(localStorage.getItem("tasksCompletedToday")) || 0;
-    let tasksCompletedTotal = parseInt(localStorage.getItem("tasksCompletedTotal")) || 0;
+    // Load counters from localStorage or initialize them with unique key names
+    let tasksCompletedToday = parseInt(localStorage.getItem("testModel_tasksCompletedToday")) || 0;
+    let tasksCompletedTotal = parseInt(localStorage.getItem("testModel_tasksCompletedTotal")) || 0;
 
     // Load tasks and update task counters
     loadTasks();
@@ -100,24 +100,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function saveTask(type, text, date, completed) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const tasks = JSON.parse(localStorage.getItem("testModel_tasks")) || [];
         tasks.push({ type, text, date, completed });
-        localStorage.setItem("tasks", JSON.stringify(tasks));
+        localStorage.setItem("testModel_tasks", JSON.stringify(tasks));
     }
 
     function updateTaskCompletionStatus(text, date, completed) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const tasks = JSON.parse(localStorage.getItem("testModel_tasks")) || [];
         const updatedTasks = tasks.map(task => {
             if (task.text === text && task.date === date) {
                 return { ...task, completed };
             }
             return task;
         });
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+        localStorage.setItem("testModel_tasks", JSON.stringify(updatedTasks));
     }
 
     function loadTasks() {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const tasks = JSON.parse(localStorage.getItem("testModel_tasks")) || [];
         
         tasks.forEach(task => {
             const taskItem = createTaskItem(task.text, task.date, task.completed);
@@ -145,9 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function removeTask(text, date) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const tasks = JSON.parse(localStorage.getItem("testModel_tasks")) || [];
         const updatedTasks = tasks.filter(task => task.text !== text || task.date !== date);
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+        localStorage.setItem("testModel_tasks", JSON.stringify(updatedTasks));
     }
 
     function updateTaskCounters() {
@@ -157,26 +157,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Save counters to localStorage
     function saveCounters() {
-        localStorage.setItem("tasksCompletedToday", tasksCompletedToday);
-        localStorage.setItem("tasksCompletedTotal", tasksCompletedTotal);
+        localStorage.setItem("testModel_tasksCompletedToday", tasksCompletedToday);
+        localStorage.setItem("testModel_tasksCompletedTotal", tasksCompletedTotal);
     }
 
     // Reset today's completed task count
     document.getElementById('reset-today-completed').addEventListener('click', () => {
         tasksCompletedToday = 0;
-        saveCounters(); // Save updated counter to localStorage
+        saveCounters();
         updateTaskCounters();
     });
 
     // Reset total tasks completed
     document.getElementById('reset-total-completed').addEventListener('click', () => {
         tasksCompletedTotal = 0;
-        saveCounters(); // Save updated counter to localStorage
+        saveCounters();
         updateTaskCounters();
     });
 
     function resetRecurringTasks() {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const tasks = JSON.parse(localStorage.getItem("testModel_tasks")) || [];
         tasks.forEach(task => {
             if (task.completed) {
                 switch (task.type) {
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
-        localStorage.setItem("tasks", JSON.stringify(tasks));
+        localStorage.setItem("testModel_tasks", JSON.stringify(tasks));
     }
 
     function scheduleMidnightReset() {
