@@ -1,67 +1,70 @@
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
-
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        plugins: [ 'dayGrid' ],
-        defaultView: 'dayGridMonth',
-        events: [
-            {
-                title: 'Event 1',
-                start: '2023-10-01'
-            },
-            {
-                title: 'Event 2',
-                start: '2023-10-05',
-                end: '2023-10-07'
-            }
-        ]
+      initialView: 'dayGridMonth',
+      editable: true,
+      events: loadTasks(), // Load tasks from localStorage
+      eventClick: function(info) {
+        let taskId = info.event.id;
+        
+        if (confirm('Do you want to mark this task as completed?')) {
+          completeTask(taskId, info.event);
+        }
+  
+        if (confirm('Do you want to delete this task?')) {
+          deleteTask(taskId, info.event);
+        }
+      },
     });
+  
     calendar.render();
-    calendar.on('eventClick', function(info) {
-        const taskId = info.event.id; // Get the unique task ID from the event
-        const taskText = info.event.title;
-        const taskDueDate = info.event.start; // Assuming you're storing the start date
-    
-        // Complete task
-        if (confirm(`Complete task: ${taskText}?`)) {
-            // Mark as completed in the to-do list
-            markTaskAsCompleted(taskText, taskDueDate); // Create this function
-            
-            // Remove the event from the calendar
-            info.event.remove();
-        }
+    synchronizeTaskList(); // Synchronize task list with calendar
+    updateCompletedCount(); // Update completed tasks counter
+  });
+  
+  function loadTasks() {
+    return JSON.parse(localStorage.getItem('tasks')) || [];
+  }
+  
+  function completeTask(id, calendarEvent) {
+    let tasks = loadTasks();
+    tasks = tasks.map(task =>
+      task.id === id ? { ...task, completed: true } : task
+    );
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    calendarEvent.setExtendedProp('completed', true);
+    calendarEvent.setProp('editable', false);
+    calendarEvent.setProp('backgroundColor', 'lightgrey');
+    synchronizeTaskList();
+    updateCompletedCount();
+  }
+  
+  function deleteTask(id, calendarEvent) {
+    let tasks = loadTasks().filter(task => task.id !== id);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    calendarEvent.remove(); // Remove from calendar
+    synchronizeTaskList();
+    updateCompletedCount();
+  }
+  
+  function synchronizeTaskList() {
+    const taskList = document.getElementById('taskList');
+    taskList.innerHTML = ''; // Clear existing list
+    const tasks = loadTasks();
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.textContent = task.title;
+      if (task.completed) {
+        li.style.textDecoration = 'line-through';
+        li.style.color = 'grey';
+      }
+      taskList.appendChild(li);
     });
-    
-    // Function to mark the task as completed in the to-do list
-    function markTaskAsCompleted(text, dueDate) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-        const updatedTasks = tasks.map(task => {
-            if (task.text === text && task.date === dueDate) {
-                task.completed = true; // Update completion status
-            }
-            return task;
-        });
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-        loadTasks(); // Reload tasks to update the list
-    }
-    
-    // Deleting the event from the calendar
-    calendar.on('eventClick', function(info) {
-        const taskId = info.event.id; // Get the unique task ID from the event
-    
-        // Delete task
-        if (confirm(`Delete task: ${info.event.title}?`)) {
-            removeTaskFromTodoList(taskId); // Call to remove from the to-do list
-            info.event.remove(); // Remove the event from the calendar
-        }
-    });
-    
-    // Function to remove a task from the to-do list
-    function removeTaskFromTodoList(taskId) {
-        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-        const updatedTasks = tasks.filter(task => task.id !== taskId); // Filter out the deleted task
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-        loadTasks(); // Reload tasks to update the list
-    }
-    
-});
+  }
+  
+  function updateCompletedCount() {
+    const tasks = loadTasks();
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const completedCounter = document.getElementById('completedCount');
+    completedCounter.textContent = `Completed Tasks: ${completedTasks}`;
+  }
